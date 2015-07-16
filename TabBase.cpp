@@ -174,6 +174,12 @@ TabObject::~TabObject()
 }
 
 
+bool TabObject::leavePage(gdioutput &gdi)
+{
+  if (tab)
+    return tab->leavePage(gdi);
+  else return false;  
+}
 bool TabObject::loadPage(gdioutput &gdi)
 {
   if (tab)

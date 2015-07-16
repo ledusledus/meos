@@ -45,6 +45,7 @@ public:
   oEvent *getEvent() const {return oe;}
   int getTabId() const {return tabId;}
   virtual bool loadPage(gdioutput &gdi) = 0;
+  virtual bool leavePage(gdioutput &gdi) {return true;};
 
   TabBase(oEvent *poe) : oe(poe), tabId(0) {}
   virtual ~TabBase()=0  {}
@@ -93,6 +94,7 @@ public:
   ~TabObject();
 
   bool loadPage(gdioutput &gdi);
+  bool leavePage(gdioutput &gdi);
 };
 
 class TabRunner;

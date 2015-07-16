@@ -136,6 +136,7 @@ public:
 
   void refillComPorts(gdioutput &gdi);
 
+  bool leavePage(gdioutput &gdi);
   bool loadPage(gdioutput &gdi);
   TabSI(oEvent *oe);
   ~TabSI(void);

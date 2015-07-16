@@ -111,7 +111,7 @@ int SportIdentCB(gdioutput *gdi, int type, void *data)
 
   return tsi.siCB(*gdi, type, data);
 }
-
+string g_port;
 int TabSI::siCB(gdioutput &gdi, int type, void *data)
 {
   if (type==GUI_BUTTON) {
@@ -145,11 +145,11 @@ int TabSI::siCB(gdioutput &gdi, int type, void *data)
       createCompetitionFromCards(gdi);
     }
     else if (bi.id=="SIPassive") {
-      string port=gdi.getText("ComPortName");
-      if (gSI->OpenComListen(port.c_str(), gdi.getTextNo("BaudRate"))) {
-        gSI->StartMonitorThread(port.c_str());
+      g_port=gdi.getText("ComPortName");
+      if (gSI->OpenComListen(g_port.c_str(), gdi.getTextNo("BaudRate"))) {
+        gSI->StartMonitorThread(g_port.c_str());
         loadPage(gdi);
-        gdi.addString("", 1, "Lyssnar på X.#"+port).setColor(colorDarkGreen);
+        gdi.addString("", 1, "Lyssnar på X.#"+g_port).setColor(colorDarkGreen);
       }
       else
         gdi.addString("", 1, "FEL: Porten kunde inte öppnas").setColor(colorRed);
@@ -174,21 +174,21 @@ int TabSI::siCB(gdioutput &gdi, int type, void *data)
       if (gdi.getSelectedItem("ComPort", &lbi)) {
 
         sprintf_s(bf, 64, "COM%d", lbi.data);
-        string port=bf;
+        g_port=bf;
 
         if (lbi.text.substr(0, 3)=="TCP")
-          port="TCP";
+          g_port="TCP";
 
-        if (gSI->IsPortOpen(port)) {
-          gSI->CloseCom(port.c_str());
-          gdi.addStringUT(0, lang.tl("Kopplar ifrån SportIdent på ") + port + lang.tl("... OK"));
+        if (gSI->IsPortOpen(g_port)) {
+          gSI->CloseCom(g_port.c_str());
+          gdi.addStringUT(0, lang.tl("Kopplar ifrån SportIdent på ") + g_port + lang.tl("... OK"));
           gdi.popX();
           gdi.dropLine();
           refillComPorts(gdi);
         }
         else {
           gdi.fillDown();
-          if (port=="TCP") {
+          if (g_port=="TCP") {
             gdi.setRestorePoint("TCP");
             gdi.dropLine();
             gdi.pushX();
@@ -206,30 +206,30 @@ int TabSI::siCB(gdioutput &gdi, int type, void *data)
             return 0;
           }
 
-          gdi.addStringUT(0, lang.tl("Startar SI på")+" "+ port + "...");
+          gdi.addStringUT(0, lang.tl("Startar SI på")+" "+ g_port + "...");
           gdi.refresh();
-          if (gSI->OpenCom(port.c_str())){
-            gSI->StartMonitorThread(port.c_str());
-            gdi.addStringUT(0, lang.tl("SI på")+" "+ port + ": "+lang.tl("OK"));
-            gdi.addStringUT(0, gSI->getInfoString(port));
-            SI_StationInfo *si = gSI->findStation(port);
+          if (gSI->OpenCom(g_port.c_str())){
+            gSI->StartMonitorThread(g_port.c_str());
+            gdi.addStringUT(0, lang.tl("SI på")+" "+ g_port + ": "+lang.tl("OK"));
+            gdi.addStringUT(0, gSI->getInfoString(g_port));
+            SI_StationInfo *si = gSI->findStation(g_port);
             if (si && !si->Extended)
               gdi.addString("", boldText, "warn:notextended").setColor(colorDarkRed);
           }
           else{
             //Retry...
             Sleep(300);
-            if (gSI->OpenCom(port.c_str())) {
-              gSI->StartMonitorThread(port.c_str());
-              gdi.addStringUT(0, lang.tl("SI på") + " " + port + ": " + lang.tl("OK"));
-              gdi.addStringUT(0, gSI->getInfoString(port.c_str()));
-              SI_StationInfo *si = gSI->findStation(port);
+            if (gSI->OpenCom(g_port.c_str())) {
+              gSI->StartMonitorThread(g_port.c_str());
+              gdi.addStringUT(0, lang.tl("SI på") + " " + g_port + ": " + lang.tl("OK"));
+              gdi.addStringUT(0, gSI->getInfoString(g_port.c_str()));
+              SI_StationInfo *si = gSI->findStation(g_port);
               if (si && !si->Extended)
                 gdi.addString("", boldText, "warn:notextended").setColor(colorDarkRed);
             }
             else {
               gdi.setRestorePoint();
-              gdi.addStringUT(1, lang.tl("SI på") +" "+ port + ": " + lang.tl("FEL, inget svar.")).setColor(colorRed);
+              gdi.addStringUT(1, lang.tl("SI på") +" "+ g_port + ": " + lang.tl("FEL, inget svar.")).setColor(colorRed);
               gdi.dropLine();
               gdi.refresh();
 
@@ -237,7 +237,7 @@ int TabSI::siCB(gdioutput &gdi, int type, void *data)
 
                 gdi.pushX();
                 gdi.fillRight();
-                gdi.addInput("ComPortName", port, 10, 0, "COM-Port:");
+                gdi.addInput("ComPortName", g_port, 10, 0, "COM-Port:");
                 //gdi.addInput("BaudRate", "4800", 10, 0, "help:baudrate");
                 gdi.fillDown();
                 gdi.addCombo("BaudRate", 130, 100, 0, "help:baudrate");
@@ -1324,6 +1324,13 @@ SportIdent &TabSI::getSI(gdioutput &gdi) {
   return *gSI;
 }
 
+bool TabSI::leavePage(gdioutput &gdi) {
+    if (gSI->IsPortOpen(g_port)) {
+        gSI->CloseCom(g_port.c_str());
+        refillComPorts(gdi);
+	}
+    return true;
+}
 bool TabSI::loadPage(gdioutput &gdi) {
   gdi.clearPage(true);
   gdi.pushX();
