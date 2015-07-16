@@ -972,6 +972,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 gdi_main->alert(ex.what());
               }
               gdi_main->setWaitCursor(false);
+            } else {
+              it->leavePage(*gdi_main);
             }
           }
         }
